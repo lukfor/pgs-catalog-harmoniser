@@ -80,7 +80,7 @@ if (params.pgs_catalog_url.startsWith('https://') || params.pgs_catalog_url.star
   process downloadPGSCatalogMeta {
 
     output:
-      file "*.xls" into pgs_catalog_excel_file
+      file "*.xlsx" into pgs_catalog_excel_file
 
     """
     wget ${params.pgs_catalog_url}
