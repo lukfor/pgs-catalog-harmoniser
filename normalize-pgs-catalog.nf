@@ -18,9 +18,32 @@ params.output_name = "dbsnp${params.dbsnp}_${params.build}"
 
 params.pgs_catalog_url = "https://ftp.ebi.ac.uk/pub/databases/spot/pgs/metadata/pgs_all_metadata.xlsx"
 
-VcfToRsIndex = file("$baseDir/src/VcfToRsIndex.java")
-ExcelToCsv = file("$baseDir/src/ExcelToCsv.java")
-ConvertScore = file("$baseDir/src/ConvertScore.java")
+VcfToRsIndexJava = file("$baseDir/src/VcfToRsIndex.java")
+ExcelToCsvJava = file("$baseDir/src/ExcelToCsv.java")
+ConvertScoreJava = file("$baseDir/src/ConvertScore.java")
+
+
+process cacheJBangScripts {
+
+  input:
+    file VcfToRsIndexJava
+    file ExcelToCsvJava
+    file ConvertScoreJava
+
+  output:
+    file "VcfToRsIndex.jar" into VcfToRsIndex
+    file "ExcelToCsv.jar" into ExcelToCsv
+    file "ConvertScore.jar" into ConvertScore
+
+  """
+
+  jbang export portable -O=VcfToRsIndex.jar ${VcfToRsIndexJava}
+  jbang export portable -O=ExcelToCsv.jar ${ExcelToCsvJava}
+  jbang export portable -O=ConvertScore.jar ${ConvertScoreJava}
+
+  """
+
+}
 
 
 if (params.dbsnp_index != null){

@@ -8,7 +8,7 @@ RUN \
 
 # Install jbang (not as conda package available)
 WORKDIR "/opt"
-RUN wget https://github.com/jbangdev/jbang/releases/download/v0.59.0/jbang.zip && \
+RUN wget https://github.com/jbangdev/jbang/releases/download/v0.78.0/jbang.zip && \
     unzip -q jbang.zip && \
     rm jbang.zip
 ENV PATH="/opt/jbang/bin:${PATH}"
