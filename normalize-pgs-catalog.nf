@@ -81,7 +81,7 @@ if (params.dbsnp_index != null){
 
     # https://github.com/samtools/htslib/issues/427
 
-    jbang ${VcfToRsIndex} \
+    java -jar ${VcfToRsIndex} \
       --input ${dbsnp_file} \
       --output ${params.output_name}.unsorted.txt
 
@@ -128,7 +128,7 @@ process convertPgsCatalogMeta {
     file "*.csv" into pgs_catalog_csv_file
 
   """
-  jbang ${ExcelToCsv} \
+  java -jar ${ExcelToCsv} \
     --input pgs_all_metadata.xlsx \
     --sheet Scores \
     --output pgs_all_metadata.csv
@@ -162,7 +162,7 @@ process downloadPgsCatalogScore {
 
   """
   wget ${score_ftp_link} -O ${score_id}.original.txt.gz
-  jbang ${ConvertScore} \
+  java -jar ${ConvertScore} \
     --input ${score_id}.original.txt.gz \
     --output ${score_id}.txt.gz \
     --dbsnp ${dbsnp_index_txt_file}
