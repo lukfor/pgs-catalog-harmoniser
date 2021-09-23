@@ -5,7 +5,7 @@ params.output = "output"
 if (params.build == "hg19"){
   dbsnp_build = "GRCh37p13";
   build_filter = "hg19|GRCh37|NR"
-} else if (params.build == "hg18"){
+} else if (params.build == "hg38"){
   dbsnp_build = "GRCh38p13";
   build_filter = "hg38|GRCh38|NR"
 } else {
