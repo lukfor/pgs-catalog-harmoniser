@@ -6,7 +6,7 @@ if (params.build == "hg19"){
   dbsnp_build = "GRCh37p13";
   build_filter = "hg19|GRCh37|NR"
 } else if (params.build == "hg38"){
-  dbsnp_build = "GRCh38p13";
+  dbsnp_build = "GRCh38p7";
   build_filter = "hg38|GRCh38|NR"
 } else {
   exit 1, "Unsupported build."
@@ -75,7 +75,7 @@ if (params.dbsnp_index != null){
 
     output:
       file "${params.output_name}.txt.gz" into dbsnp_index_txt_file
-      file "${params.output_name}.txr.gz.tbi" into dbsnp_index_tbi_file
+      file "${params.output_name}.txt.gz.tbi" into dbsnp_index_tbi_file
 
     """
 
