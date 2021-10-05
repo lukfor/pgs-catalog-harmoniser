@@ -129,7 +129,7 @@ process convertPgsCatalogMeta {
 
   """
   java -jar ${ExcelToCsv} \
-    --input pgs_all_metadata.xlsx \
+    --input ${excel_file} \
     --sheet Scores \
     --output pgs_all_metadata.csv
   """

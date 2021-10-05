@@ -20,7 +20,7 @@ import picocli.CommandLine.Option;
 //REPOS jcenter,jfrog-genepi-maven=https://genepi.jfrog.io/artifactory/maven
 //DEPS info.picocli:picocli:4.5.0
 //DEPS genepi:genepi-io:1.1.1
-//DEPS lukfor:pgs-calc:0.9.3-beta2
+//DEPS lukfor:pgs-calc:0.9.6
 
 public class ConvertScore implements Callable<Integer> {
 
@@ -68,8 +68,11 @@ public class ConvertScore implements Callable<Integer> {
 			}
 
 			// test file format
-			RiskScoreFile score = new RiskScoreFile(output, new PGSCatalogFormat());
-			score.buildIndex("1");
+			RiskScoreFile score = null;
+			for (int i = 1; i <= 22; i++){
+				score = new RiskScoreFile(output, new PGSCatalogFormat());
+				score.buildIndex(i + "");
+			}
 			if (fileFormat == PGSCatalogFileFormat.COORDINATES) {
 				originalVariants = score.getTotalVariants();
 			}
