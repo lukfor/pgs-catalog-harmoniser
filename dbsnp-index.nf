@@ -95,6 +95,7 @@ process createCloudgeneYaml {
   echo "category: dbsnp-index" >> ${params.output_name}.yaml
   echo "properties:" >> ${params.output_name}.yaml
   echo "  dbsnp_index: \\\${local_app_folder}/${params.output_name}.{txt.gz,txt.gz.tbi}" >> ${params.output_name}.yaml
+  echo "  dbsnp_index_build: ${params.build}" >> ${params.output_name}.yaml
   """
 
 }
