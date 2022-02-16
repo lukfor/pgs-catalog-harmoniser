@@ -1,14 +1,12 @@
-params.dbsnp = "150"
 params.build = "hg19"
 params.output = "output"
 params.version = "1.0.0"
 params.dbsnp_index = "dbsnp-index.small{.txt.gz,.txt.gz.tbi}"
+params.pgs_catalog_url = "https://ftp.ebi.ac.uk/pub/databases/spot/pgs/metadata/pgs_all_metadata.xlsx"
 
 if (params.build == "hg19"){
-  dbsnp_build = "GRCh37p13";
   build_filter = "hg19|GRCh37|NR"
 } else if (params.build == "hg38"){
-  dbsnp_build = "GRCh38p7";
   build_filter = "hg38|GRCh38|NR"
 } else {
   exit 1, "Unsupported build."
