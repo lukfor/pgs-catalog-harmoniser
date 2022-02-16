@@ -1,6 +1,8 @@
 params.dbsnp = "150"
 params.build = "hg19"
 params.output = "output"
+params.version = "1.0.0"
+params.dbsnp_index = "dbsnp-index.small{.txt.gz,.txt.gz.tbi}"
 
 if (params.build == "hg19"){
   dbsnp_build = "GRCh37p13";
@@ -13,89 +15,25 @@ if (params.build == "hg19"){
 }
 
 
-params.vcf_url = "https://ftp.ncbi.nlm.nih.gov/snp/organisms/human_9606_b${params.dbsnp}_${dbsnp_build}/VCF/00-All.vcf.gz"
-params.output_name = "dbsnp${params.dbsnp}_${params.build}"
-
-params.pgs_catalog_url = "https://ftp.ebi.ac.uk/pub/databases/spot/pgs/metadata/pgs_all_metadata.xlsx"
-
-VcfToRsIndexJava = file("$baseDir/src/VcfToRsIndex.java")
+Channel.fromFilePairs(params.dbsnp_index).set{dbsnp_index_ch}
 ExcelToCsvJava = file("$baseDir/src/ExcelToCsv.java")
-ConvertScoreJava = file("$baseDir/src/ConvertScore.java")
 
 
 process cacheJBangScripts {
 
   input:
-    file VcfToRsIndexJava
     file ExcelToCsvJava
-    file ConvertScoreJava
 
   output:
-    file "VcfToRsIndex.jar" into VcfToRsIndex
     file "ExcelToCsv.jar" into ExcelToCsv
-    file "ConvertScore.jar" into ConvertScore
 
   """
 
-  jbang export portable -O=VcfToRsIndex.jar ${VcfToRsIndexJava}
   jbang export portable -O=ExcelToCsv.jar ${ExcelToCsvJava}
-  jbang export portable -O=ConvertScore.jar ${ConvertScoreJava}
 
   """
 
 }
-
-
-if (params.dbsnp_index != null){
-
-  dbsnp_index_txt_file = file(params.dbsnp_index);
-  dbsnp_index_tbi_file = file(params.dbsnp_index + '.tbi');
-
-} else {
-
-  process downloadVCFFromDbSnp {
-
-    output:
-      file "*.vcf.gz" into dbsnp_file
-
-    """
-    wget ${params.vcf_url}
-    """
-
-  }
-
-
-  process buildDbSnpIndex {
-
-    publishDir "$params.output", mode: 'copy'
-
-    input:
-      file dbsnp_file
-      file VcfToRsIndex
-
-    output:
-      file "${params.output_name}.txt.gz" into dbsnp_index_txt_file
-      file "${params.output_name}.txt.gz.tbi" into dbsnp_index_tbi_file
-
-    """
-
-    # https://github.com/samtools/htslib/issues/427
-
-    java -jar ${VcfToRsIndex} \
-      --input ${dbsnp_file} \
-      --output ${params.output_name}.unsorted.txt
-
-    sort -t\$'\t' -k1,1 -k2,2n ${params.output_name}.unsorted.txt > ${params.output_name}.txt
-    rm ${params.output_name}.unsorted.txt
-    bgzip ${params.output_name}.txt
-    tabix -s1 -b2 -e2 ${params.output_name}.txt.gz
-
-    """
-
-  }
-
-}
-
 
 
 if (params.pgs_catalog_url.startsWith('https://') || params.pgs_catalog_url.startsWith('http://')){
@@ -144,16 +82,14 @@ pgs_catalog_csv_file
 
 process downloadPgsCatalogScore {
 
-  publishDir "$params.output", mode: 'copy'
+  publishDir "$params.output/scores", mode: 'copy'
 
   input:
     val score from scores_ch
-    file dbsnp_index_txt_file from dbsnp_index_txt_file
-    file dbsnp_index_tbi_file from dbsnp_index_tbi_file
-    file ConvertScore
+    tuple val(dbsnp_index), file(dbsnp_index_file) from dbsnp_index_ch.collect()
 
   output:
-    file "*.txt.gz" optional true into pgs_catalog_scores_files
+    file "${score_id}.txt.gz" optional true into pgs_catalog_scores_files
     file "*.log" into pgs_catalog_scores_logs
 
   script:
@@ -162,11 +98,42 @@ process downloadPgsCatalogScore {
 
   """
   wget ${score_ftp_link} -O ${score_id}.original.txt.gz
-  java -jar ${ConvertScore} \
-    --input ${score_id}.original.txt.gz \
-    --output ${score_id}.txt.gz \
-    --dbsnp ${dbsnp_index_txt_file}
+
+  pgs-calc resolve \
+    --in ${score_id}.original.txt.gz \
+    --out ${score_id}.txt.gz  \
+    --dbsnp ${dbsnp_index}.txt.gz > ${score_id}.log
+
   rm ${score_id}.original.txt.gz
+
+  """
+
+}
+
+process createCloudgeneYaml {
+
+  publishDir "$params.output", mode: 'copy'
+
+  input:
+    file scores from pgs_catalog_scores_files.collect()
+
+  output:
+    file "${params.output_name}.yaml"
+
+  """
+  echo "id: pgs-catalog-v${params.version}-${params.build}" > cloudgene.yaml
+  echo "name:  PGS Catalog (${params.build}, ${scores.size()} scores)" >> cloudgene.yaml
+  echo "version: ${params.version}" >> cloudgene.yaml
+  echo "category: PGSPanel" >> cloudgene.yaml
+  echo "website: https://www.pgscatalog.org" >> cloudgene.yaml
+  echo "properties:" >> cloudgene.yaml
+  echo "  location: \\\${hdfs_app_folder}/scores" >> cloudgene.yaml
+  echo "  scores:" >> cloudgene.yaml
+  echo "    -${scores.join('\n    -')}" >> cloudgene.yaml
+  echo "installation:" >> cloudgene.yaml
+  echo "  - import:" >> cloudgene.yaml
+  echo "    source: \\\${local_app_folder}/scores" >> cloudgene.yaml
+  echo "    target: \\\${hdfs_app_folder}/scores" >> cloudgene.yaml
   """
 
 }
