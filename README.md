@@ -26,10 +26,16 @@ Build docker image before run the pipeline:
 docker build -t lukfor/normalize-pgs-catalog . # don't ingore the dot here
 ```
 
-## Create Index
+## Step 1: Create dbSNP Index
 
 ```
-nextflow run normalize-pgs-catalog.nf
+nextflow run dbsnp-index.nf --dbsnp 150 --build hg19 --output output
+```
+
+## Step 2: Download all scores and replace rsIDs with phyiscal positions
+
+```
+nextflow run normalize-pgs-catalog.nf --build hg19 --version 1.0.0 --dbsnp_index "output/dbsnp150_hg19{.txt.gz,.txt.gz.tbi}" --output output
 ```
 
 ## License
