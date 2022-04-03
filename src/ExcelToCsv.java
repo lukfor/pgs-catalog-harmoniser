@@ -54,7 +54,8 @@ public class ExcelToCsv implements Callable<Integer> {
                             if (!row[i].isEmpty()) {
                                   empty = false;
                             }
-                      }
+                            row[i] = row[i].replaceAll("\"","");
+		      }
                       if (!empty) {
                             writer.setRow(row);
                             writer.next();

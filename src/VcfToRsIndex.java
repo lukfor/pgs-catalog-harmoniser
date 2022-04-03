@@ -7,6 +7,7 @@ import genepi.io.table.writer.CsvTableWriter;
 import genepi.io.table.writer.ExcelTableWriter;
 import genepi.io.table.writer.ITableWriter;
 import genepi.io.text.LineWriter;
+import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
 import picocli.CommandLine;
@@ -56,7 +57,7 @@ public class VcfToRsIndex implements Callable<Integer> {
 				String contig = VcfToRsIndex.getContig(variant.getID());
 				int position = VcfToRsIndex.getPosition(variant.getID());
 				writer.write(contig + "\t" + position + "\t" + variant.getContig() + "\t" + variant.getStart() + "\t"
-						+ variant.getReference());
+						+ variant.getReference().getBaseString() + "\t"	+ VcfToRsIndex.joinAlleles(variant.getAlternateAlleles()));
 			}
 		}
 
@@ -81,6 +82,17 @@ public class VcfToRsIndex implements Callable<Integer> {
 		} else {
 			return Integer.parseInt(rsID.substring(2));
 		}
+	}
+
+	public static String joinAlleles(List<Allele> alleles) {
+		String result = "";
+		for (int  i= 0; i < alleles.size(); i++) {
+			if (i > 0) {
+				result+=",";
+			}
+			result += alleles.get(i).getBaseString();
+		}
+		return result;
 	}
 
 }

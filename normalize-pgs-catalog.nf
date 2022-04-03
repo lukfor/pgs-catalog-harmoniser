@@ -80,6 +80,8 @@ pgs_catalog_csv_file
 
 process downloadPgsCatalogScore {
 
+  errorStrategy 'ignore'
+
   publishDir "$params.output/scores", mode: 'copy'
 
   input:
@@ -88,21 +90,20 @@ process downloadPgsCatalogScore {
 
   output:
     file "${score_id}.txt.gz" optional true into pgs_catalog_scores_files
-    file "*.log" into pgs_catalog_scores_logs
+    file "*.log" optional true into pgs_catalog_scores_logs
 
   script:
     score_id = score['Polygenic Score (PGS) ID']
     score_ftp_link = score['FTP link']
 
-  """
+  """ 
+
   wget ${score_ftp_link} -O ${score_id}.original.txt.gz
 
   pgs-calc resolve \
     --in ${score_id}.original.txt.gz \
     --out ${score_id}.txt.gz  \
     --dbsnp ${dbsnp_index}.txt.gz > ${score_id}.log
-
-  rm ${score_id}.original.txt.gz
 
   """
 
@@ -116,22 +117,23 @@ process createCloudgeneYaml {
     file scores from pgs_catalog_scores_files.collect()
 
   output:
-    file "${params.output_name}.yaml"
+    file "cloudgene.yaml"
 
   """
   echo "id: pgs-catalog-v${params.version}-${params.build}" > cloudgene.yaml
-  echo "name:  PGS Catalog (${params.build}, ${scores.size()} scores)" >> cloudgene.yaml
+  echo "name: PGS Catalog (${params.build}, ${scores.size()} scores)" >> cloudgene.yaml
   echo "version: ${params.version}" >> cloudgene.yaml
   echo "category: PGSPanel" >> cloudgene.yaml
   echo "website: https://www.pgscatalog.org" >> cloudgene.yaml
   echo "properties:" >> cloudgene.yaml
+  echo "  build: ${params.build}" >> cloudgene.yaml
   echo "  location: \\\${hdfs_app_folder}/scores" >> cloudgene.yaml
   echo "  scores:" >> cloudgene.yaml
-  echo "    -${scores.join('\n    -')}" >> cloudgene.yaml
+  echo "    - ${scores.join('\n      - ')}" >> cloudgene.yaml
   echo "installation:" >> cloudgene.yaml
   echo "  - import:" >> cloudgene.yaml
-  echo "    source: \\\${local_app_folder}/scores" >> cloudgene.yaml
-  echo "    target: \\\${hdfs_app_folder}/scores" >> cloudgene.yaml
+  echo "      source: \\\${local_app_folder}/scores" >> cloudgene.yaml
+  echo "      target: \\\${hdfs_app_folder}/scores" >> cloudgene.yaml
   """
 
 }
