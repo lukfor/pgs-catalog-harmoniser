@@ -10,7 +10,7 @@ if (params.build == "hg19"){
 } else if (params.build == "hg38"){
   build_filter = "hg38|GRCh38|NR"
 } else {
-  exit 1, "Unsupported build."
+  exit 1, "Unsupported target build."
 }
 
 
@@ -77,6 +77,7 @@ process convertPgsCatalogMeta {
 // filter out other builds
 pgs_catalog_csv_file
   .splitCsv(header: true, sep: ',', quote:'"')
+  .filter(row -> row['Original Genome Build'].matches("hg19|GRCh37|hg38|GRCh38|NR") )
   .set { scores_ch }
 
 process downloadPgsCatalogScore {
@@ -132,7 +133,7 @@ def find_chain_file(score_build, target_build){
       return "hg38ToHg19.over.chain.gz";
     }
   }
-  exit 1, "Unsupported build."
+  exit 1, "Unsupported '${score_build}'build."
 }
 
 
