@@ -3,3 +3,6 @@ work
 .nextflow.log.*
 .nextflow
 tests/output
+output
+.nf-test
+.DS_Store

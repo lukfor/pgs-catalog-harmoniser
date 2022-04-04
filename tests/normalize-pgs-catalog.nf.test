@@ -1,0 +1,42 @@
+nextflow_pipeline {
+
+    name "Test Workflow normalize-pgs-catalog.nf"
+    script "normalize-pgs-catalog.nf"
+
+    test("Test PGS000899 with hg19") {
+
+        when {
+            params {
+                build = "hg19"
+                output = "output/test1"
+                version = "1.0.0"
+                dbsnp_index = "tests/input/dbsnp-index.small{.txt.gz,.txt.gz.tbi}"
+                pgs_catalog_url = "tests/input/pgs_all_metadata_pgs000899.xlsx"
+            }
+        }
+
+        then {
+            assert workflow.success
+        }
+
+    }
+
+    test("Test PGS000899 with liftover to hg38") {
+
+        when {
+            params {
+                build = "hg38"
+                output = "output/test2"
+                version = "1.0.0"
+                dbsnp_index = "tests/input/dbsnp-index.small{.txt.gz,.txt.gz.tbi}"
+                pgs_catalog_url = "tests/input/pgs_all_metadata_pgs000899.xlsx"
+            }
+        }
+
+        then {
+            assert workflow.success
+        }
+
+    }
+
+}

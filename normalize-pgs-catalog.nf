@@ -1,8 +1,9 @@
 params.build = "hg19"
 params.output = "output"
 params.version = "1.0.0"
-params.dbsnp_index = "dbsnp-index.small{.txt.gz,.txt.gz.tbi}"
+params.dbsnp_index = "test/data/input/dbsnp-index.small{.txt.gz,.txt.gz.tbi}"
 params.pgs_catalog_url = "https://ftp.ebi.ac.uk/pub/databases/spot/pgs/metadata/pgs_all_metadata.xlsx"
+params.chain_files = "$baseDir/chains/*.chain.gz"
 
 if (params.build == "hg19"){
   build_filter = "hg19|GRCh37|NR"
@@ -14,6 +15,7 @@ if (params.build == "hg19"){
 
 
 Channel.fromFilePairs(params.dbsnp_index).set{dbsnp_index_ch}
+Channel.fromPath(params.chain_files).set{chain_files_ch}
 ExcelToCsvJava = file("$baseDir/src/ExcelToCsv.java")
 
 
@@ -75,18 +77,18 @@ process convertPgsCatalogMeta {
 // filter out other builds
 pgs_catalog_csv_file
   .splitCsv(header: true, sep: ',', quote:'"')
-  .filter(row -> row['Original Genome Build'].matches(build_filter) )
   .set { scores_ch }
 
 process downloadPgsCatalogScore {
 
-  errorStrategy 'ignore'
+  //errorStrategy 'ignore'
 
   publishDir "$params.output/scores", mode: 'copy'
 
   input:
     val score from scores_ch
     tuple val(dbsnp_index), file(dbsnp_index_file) from dbsnp_index_ch.collect()
+    file chain from chain_files_ch.collect()
 
   output:
     file "${score_id}.txt.gz" optional true into pgs_catalog_scores_files
@@ -95,19 +97,44 @@ process downloadPgsCatalogScore {
   script:
     score_id = score['Polygenic Score (PGS) ID']
     score_ftp_link = score['FTP link']
+    score_build = score['Original Genome Build']
+    chain_file = find_chain_file(score_build, params.build)
 
-  """ 
-
+  """
+  set +e
   wget ${score_ftp_link} -O ${score_id}.original.txt.gz
 
   pgs-calc resolve \
     --in ${score_id}.original.txt.gz \
     --out ${score_id}.txt.gz  \
-    --dbsnp ${dbsnp_index}.txt.gz > ${score_id}.log
+    ${chain_file != null ? "--chain " + chain_file : ""} \
+    --dbsnp ${dbsnp_index}.txt.gz &> ${score_id}.log
+
+  # ignore pgs-calc status to get log files of failed scores.
+  exit 0
 
   """
 
 }
+
+def find_chain_file(score_build, target_build){
+
+  if(score_build.matches("hg19|GRCh37|NR")){
+    if (target_build == "hg19"){
+      return null;
+    } else if (target_build == "hg38"){
+      return "hg19ToHg38.over.chain.gz";
+    }
+  } else if(score_build.matches("hg38|GRCh38|NR")){
+    if (target_build == "hg38"){
+      return null;
+    } else if (target_build == "hg19"){
+      return "hg38ToHg19.over.chain.gz";
+    }
+  }
+  exit 1, "Unsupported build."
+}
+
 
 process createCloudgeneYaml {
 
