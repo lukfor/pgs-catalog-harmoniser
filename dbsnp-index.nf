@@ -13,22 +13,27 @@ if (params.build == "hg19"){
 }
 
 
+params.format = "vcf"
 params.vcf_url = "https://ftp.ncbi.nlm.nih.gov/snp/organisms/human_9606_b${params.dbsnp}_${dbsnp_build}/VCF/00-All.vcf.gz"
 params.output_name = "dbsnp${params.dbsnp}_${params.build}"
 
 VcfToRsIndexJava = file("$baseDir/src/VcfToRsIndex.java")
+TabToRsIndexJava = file("$baseDir/src/TabToRsIndex.java")
 
 process cacheJBangScripts {
 
   input:
     file VcfToRsIndexJava
+    file TabToRsIndexJava
 
   output:
     file "VcfToRsIndex.jar" into VcfToRsIndex
+    file "TabToRsIndex.jar" into TabToRsIndex
 
   """
 
   jbang export portable -O=VcfToRsIndex.jar ${VcfToRsIndexJava}
+  jbang export portable -O=TabToRsIndex.jar ${TabToRsIndexJava}
 
   """
 
@@ -42,7 +47,7 @@ process downloadVCFFromDbSnp {
     file "*.vcf.gz" into dbsnp_file
 
   """
-  wget ${params.vcf_url}
+  wget ${params.vcf_url} -O all.vcf.gz
   """
 
 }
@@ -55,6 +60,7 @@ process buildDbSnpIndex {
   input:
     file dbsnp_file
     file VcfToRsIndex
+    file TabToRsIndex
 
   output:
     file "${params.output_name}.txt.gz" into dbsnp_index_txt_file
@@ -64,7 +70,7 @@ process buildDbSnpIndex {
 
   # https://github.com/samtools/htslib/issues/427
 
-  java -jar ${VcfToRsIndex} \
+  java -jar ${params.format == "vcf" ? VcfToRsIndex : TabToRsIndex} \
     --input ${dbsnp_file} \
     --output ${params.output_name}.unsorted.txt
 

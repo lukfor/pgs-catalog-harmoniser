@@ -6,10 +6,8 @@ import java.util.concurrent.Callable;
 import genepi.io.table.writer.CsvTableWriter;
 import genepi.io.table.writer.ExcelTableWriter;
 import genepi.io.table.writer.ITableWriter;
+import genepi.io.text.LineReader;
 import genepi.io.text.LineWriter;
-import htsjdk.variant.variantcontext.Allele;
-import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.vcf.VCFFileReader;
 import picocli.CommandLine;
 import picocli.CommandLine.Option;
 
@@ -17,11 +15,10 @@ import picocli.CommandLine.Option;
 //REPOS jcenter,jfrog-genepi-maven=https://genepi.jfrog.io/artifactory/maven
 //DEPS info.picocli:picocli:4.5.0
 //DEPS genepi:genepi-io:1.0.12
-//DEPS com.github.samtools:htsjdk:2.21.3
 
-public class VcfToRsIndex implements Callable<Integer> {
+public class TabToRsIndex implements Callable<Integer> {
 
-	@Option(names = "--input", description = "input vcf file", required = true)
+	@Option(names = "--input", description = "input tab file", required = true)
 	private String input;
 
 	@Option(names = "--output", description = "output file", required = true)
@@ -36,7 +33,7 @@ public class VcfToRsIndex implements Callable<Integer> {
 	}
 
 	public static void main(String... args) {
-		int exitCode = new CommandLine(new VcfToRsIndex()).execute(args);
+		int exitCode = new CommandLine(new TabToRsIndex()).execute(args);
 		System.exit(exitCode);
 	}
 
@@ -46,18 +43,21 @@ public class VcfToRsIndex implements Callable<Integer> {
 		assert (input != null);
 		assert (output != null);
 
-		VCFFileReader reader = new VCFFileReader(new File(input), false);
+		LineReader reader = new LineReader(input);
 
 		LineWriter writer = new LineWriter(output);
 
 
-		for (VariantContext variant : reader) {
+		while (reader.next()) {
 
-			if (variant.getID().startsWith("rs")) {
-				String contig = VcfToRsIndex.getContig(variant.getID());
-				int position = VcfToRsIndex.getPosition(variant.getID());
-				writer.write(contig + "\t" + position + "\t" + variant.getContig() + "\t" + variant.getStart() + "\t"
-						+ variant.getReference().getBaseString() + "\t"	+ VcfToRsIndex.joinAlleles(variant.getAlternateAlleles()));
+			String tiles[] = reader.get().split("\t");
+			String id = tiles[2];
+
+			if (id.startsWith("rs")) {
+				String contig = TabToRsIndex.getContig(id);
+				int position = TabToRsIndex.getPosition(id);
+				writer.write(contig + "\t" + position + "\t" + tiles[0] + "\t" + tiles[1] + "\t"
+						+ tiles[3] + "\t" + tiles[4]);
 			}
 		}
 
@@ -67,12 +67,13 @@ public class VcfToRsIndex implements Callable<Integer> {
 		return 0;
 	}
 
+
 	public static String getContig(String rsID) {
 		if (rsID.length() > 10) {
 			// TODO: count zeros --> rs1, rs10, ...
-			String position = rsID.substring(3);
+			String position = rsID.substring(4);
 			int count = countCharacter(position, '0');
-			return rsID.substring(0, 3) + sequence('0', count);
+			return rsID.substring(0, 4) + sequence('0', count);
 		} else {
 			String position = rsID.substring(2);
 			int count = countCharacter(position, '0');
@@ -82,7 +83,7 @@ public class VcfToRsIndex implements Callable<Integer> {
 
 	public static int getPosition(String rsID) {
 		if (rsID.length() > 10) {
-			return Integer.parseInt(rsID.substring(3));
+			return Integer.parseInt(rsID.substring(4));
 		} else {
 			return Integer.parseInt(rsID.substring(2));
 		}
@@ -103,17 +104,6 @@ public class VcfToRsIndex implements Callable<Integer> {
 		String result = "";
 		for (int i = 0; i < count; i++) {
 			result += character;
-		}
-		return result;
-	}
-
-	public static String joinAlleles(List<Allele> alleles) {
-		String result = "";
-		for (int  i= 0; i < alleles.size(); i++) {
-			if (i > 0) {
-				result+=",";
-			}
-			result += alleles.get(i).getBaseString();
 		}
 		return result;
 	}
