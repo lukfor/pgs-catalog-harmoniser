@@ -27,6 +27,9 @@ public class VcfToRsIndex implements Callable<Integer> {
 	@Option(names = "--output", description = "output file", required = true)
 	private String output;
 
+	@Option(names = "--size", description = "index size", required = false)
+	private int size = 4;
+
 	public void setInput(String input) {
 		this.input = input;
 	}
@@ -54,8 +57,8 @@ public class VcfToRsIndex implements Callable<Integer> {
 		for (VariantContext variant : reader) {
 
 			if (variant.getID().startsWith("rs")) {
-				String contig = VcfToRsIndex.getContig(variant.getID());
-				int position = VcfToRsIndex.getPosition(variant.getID());
+				String contig = VcfToRsIndex.getContig(variant.getID(), size);
+				int position = VcfToRsIndex.getPosition(variant.getID(), size);
 				writer.write(contig + "\t" + position + "\t" + variant.getContig() + "\t" + variant.getStart() + "\t"
 						+ variant.getReference().getBaseString() + "\t"	+ VcfToRsIndex.joinAlleles(variant.getAlternateAlleles()));
 			}
@@ -67,12 +70,12 @@ public class VcfToRsIndex implements Callable<Integer> {
 		return 0;
 	}
 
-	public static String getContig(String rsID) {
+	public static String getContig(String rsID, int size) {
 		if (rsID.length() > 10) {
 			// TODO: count zeros --> rs1, rs10, ...
-			String position = rsID.substring(3);
+			String position = rsID.substring(size);
 			int count = countCharacter(position, '0');
-			return rsID.substring(0, 3) + sequence('0', count);
+			return rsID.substring(0, size) + sequence('0', count);
 		} else {
 			String position = rsID.substring(2);
 			int count = countCharacter(position, '0');
@@ -80,9 +83,9 @@ public class VcfToRsIndex implements Callable<Integer> {
 		}
 	}
 
-	public static int getPosition(String rsID) {
+	public static int getPosition(String rsID, int size) {
 		if (rsID.length() > 10) {
-			return Integer.parseInt(rsID.substring(3));
+			return Integer.parseInt(rsID.substring(size));
 		} else {
 			return Integer.parseInt(rsID.substring(2));
 		}

@@ -1,6 +1,7 @@
 params.dbsnp = "150"
 params.build = "hg19"
 params.output = "output"
+params.index_size = 4 
 
 if (params.build == "hg19"){
   dbsnp_build = "GRCh37p13";
@@ -72,9 +73,13 @@ process buildDbSnpIndex {
 
   java -jar ${params.format == "vcf" ? VcfToRsIndex : TabToRsIndex} \
     --input ${dbsnp_file} \
+    --size ${params.index_size} \
     --output ${params.output_name}.unsorted.txt
 
-  sort -t\$'\t' -k1,1 -k2,2n ${params.output_name}.unsorted.txt > ${params.output_name}.txt
+  echo "#format=dbsnp-index" > ${params.output_name}.txt
+  echo "#version=1.0" >> ${params.output_name}.txt
+  echo "#size=${params.index_size}" >> ${params.output_name}.txt
+  sort -t\$'\t' -k1,1 -k2,2n ${params.output_name}.unsorted.txt >> ${params.output_name}.txt
   rm ${params.output_name}.unsorted.txt
   bgzip ${params.output_name}.txt
   tabix -s1 -b2 -e2 ${params.output_name}.txt.gz
