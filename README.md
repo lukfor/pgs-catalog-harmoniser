@@ -10,10 +10,10 @@ Normalize PGS-Catalog
 ```mermaid
 graph TD
     INPUT[Score File] -->FILEFORMAT{Detect<br>Fileformat}
-    FILEFORMAT -- RsIds --> RESOLVE[Resolve RsIds<br>to target_build]
-    INDEX[(Rs Index<br>hg19<br>hg38)] --> RESOLVE
+    FILEFORMAT -- rsIDs --> RESOLVE[Resolve rsIDs<br>to target_build]
+    INDEX[(dbsnp-index<br>hg19<br>hg38)] --> RESOLVE
     RESOLVE --> DONE[Harmonized<br>Score File]
-    FILEFORMAT -- Coordinates --> D{Is<br>target_build?}
+    FILEFORMAT -- chromosomal position --> D{Is<br>target_build?}
     D -- Yes --> DONE
     D -- No --> LIFTOVER[Lift Over<br>to target_build]
     CHAIN[(Chain Files<br>hg19 to hg38<br>hg38 to hg19)] --> LIFTOVER
@@ -49,7 +49,7 @@ nextflow run dbsnp-index.nf \
   --dbsnp 154 \
   --build hg19 \
   --format tab \
---vcf_url https://resources.pheweb.org/rsids-v154-hg19.tsv.gz \
+  --vcf_url https://resources.pheweb.org/rsids-v154-hg19.tsv.gz \
   --output output/dbsnp-index
 ```
 
