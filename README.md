@@ -53,7 +53,7 @@ nextflow run dbsnp-index.nf \
   --output output/dbsnp-index
 ```
 
-Pre-calculated dbsnp-index files can be found [here](https://imputationserver.sph.umich.edu/resources/dbsnp/). They can be used in [pgs-calc](https://github.com/lukfor/pgs-calc) to resolve rsIDs to chromosomal positions.
+Pre-calculated dbsnp-index files can be found [here](https://imputationserver.sph.umich.edu/resources/dbsnp-index/). They can be used in [pgs-calc](https://github.com/lukfor/pgs-calc) to resolve rsIDs to chromosomal positions.
 
 ## Step 2: Download all scores and replace rsIDs with phyiscal positions
 
