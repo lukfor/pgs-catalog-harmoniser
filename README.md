@@ -3,9 +3,8 @@
 This Nextflow pipeline downloads all scores from PGS-Catalog and:
 
 - converts all scores with rsIDs to chromosomal position using dbSNP and the provided build
-- performs liftover to bring all scores to the same Build
-Normalize PGS-Catalog
-- tries to detect missing `other_allele` or remove those scores
+- performs liftover to bring all scores to the same build
+- sets missing `other_allele` for non multi-allelic SNPs
 
 ```mermaid
 graph TD
