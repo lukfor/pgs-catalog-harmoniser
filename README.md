@@ -13,7 +13,7 @@ graph TD
     FILEFORMAT -- rsIDs --> RESOLVE[Resolve rsIDs<br>to target_build]
     INDEX[(dbsnp-index<br>hg19<br>hg38)] --> RESOLVE
     RESOLVE --> DONE[Harmonized<br>Score File]
-    FILEFORMAT -- chromosomal position --> D{Is<br>target_build?}
+    FILEFORMAT -- chromosomal<br>positions --> D{Is<br>target_build?}
     D -- Yes --> DONE
     D -- No --> LIFTOVER[Lift Over<br>to target_build]
     CHAIN[(Chain Files<br>hg19 to hg38<br>hg38 to hg19)] --> LIFTOVER
@@ -53,7 +53,7 @@ nextflow run dbsnp-index.nf \
   --output output/dbsnp-index
 ```
 
-Pre-calculated dbsnp-index files can be found [here](https://imputationserver.sph.umich.edu/resources/dbsnp-index/). They can be used in [pgs-calc](https://github.com/lukfor/pgs-calc) to resolve rsIDs to chromosomal positions.
+Pre-calculated dbsnp-index files can be found [here](https://imputationserver.sph.umich.edu/resources/dbsnp/). They can be used in [pgs-calc](https://github.com/lukfor/pgs-calc) to resolve rsIDs to chromosomal positions.
 
 ## Step 2: Download all scores and replace rsIDs with phyiscal positions
 
