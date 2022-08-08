@@ -146,6 +146,7 @@ process createCloudgeneYaml {
 
   output:
     file "cloudgene.yaml"
+    file "scores.txt"
 
   """
   echo "id: pgs-catalog-v${params.version}-${params.build}" > cloudgene.yaml
@@ -162,6 +163,9 @@ process createCloudgeneYaml {
   echo "  - import:" >> cloudgene.yaml
   echo "      source: \\\${local_app_folder}/scores" >> cloudgene.yaml
   echo "      target: \\\${hdfs_app_folder}/scores" >> cloudgene.yaml
+  
+  echo "SCORES" > scores.txt
+  echo "scores/${scores.join('\nscores/')}" >> scores.txt
   """
 
 }
