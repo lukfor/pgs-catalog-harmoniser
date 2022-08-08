@@ -1,0 +1,194 @@
+---
+title: "PGS-Catalog"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::robobook:
+    self_contained: true
+    thumbnails: false
+    lightbox: true
+    gallery: false
+    highlight: tango
+author: pgs-catalog-harmoniser
+params:
+  logs_directory: "../tests/input/logs"
+  meta_file: "../tests/input/pgs_all_metadata.xlsx"
+  output_filename: "output"
+---
+
+```{r setup, include=FALSE}
+
+library(readr)
+library(stringr)
+library(readxl)
+library(ggplot2)
+library(DT)
+library(dplyr)
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r}
+meta <- read_excel(params$meta_file, sheet = "Readme", col_names = FALSE)
+datatable(meta)
+```
+
+## Builds
+
+
+```{r}
+scores <- read_excel(params$meta_file, sheet = "Scores") %>%
+    mutate(
+      original_build = case_when(
+        `Original Genome Build` == "hg19" | `Original Genome Build` =="GRCh37"  ~ "hg19",
+        `Original Genome Build` == "hg38" | `Original Genome Build` =="GRCh38"  ~ "hg38",
+        `Original Genome Build` == "NR" ~ "NR",
+        TRUE ~ "Other",
+      )
+  )
+
+ggplot(scores, aes(x = original_build)) +  geom_bar()
+
+scores %>% group_by(original_build) %>% summarize(count = n()) %>% mutate(percentage = paste(round(count / sum(count) * 100, 2), "%")) %>% arrange(desc(percentage)) %>% datatable()
+
+other_build <- scores %>% filter(original_build == "Other")
+
+
+```
+
+## Variants
+
+```{r}
+ggplot(scores, aes(x = `Number of Variants`)) +   geom_histogram()
+```
+
+
+```{r}
+
+# Load all log files
+result <- data.frame() %>%
+  mutate(
+    score = NA,
+    format = NA,
+    original_variants = NA,
+    variants = NA,
+    coverage = NA,
+    chain_file = NA,
+    dbsnp_file = NA,
+    error = NA
+  )
+
+files <- list.files(path=params$logs_directory, pattern="*.log", full.names=TRUE, recursive=FALSE)
+for ( filename in files){
+  text <- read_lines(filename)
+  text <- paste(text, collapse='\n')
+  name <- str_match(text, "Input File: (.*).original.txt.gz")
+  format <- str_match(text, "Input File Format: (.*)")
+  variants <- str_match(text, "Number Variants Output: (.*)/(.*)")
+  chain_file <- str_match(text, "Liftover using chain file '(.*)'")
+  dbsnp_file <- str_match(text, "Resolve rsIDs using index file '(.*)'")
+  error <- str_match(text, "\\*\\*\\* ERROR \\*\\*\\*  (.*)");
+
+  result[nrow(result) + 1,] <- c(name[2], format[2], strtoi(variants[3]), strtoi(variants[2]), round(strtoi(variants[2]) /strtoi(variants[3]),2), chain_file[2], dbsnp_file[2], error[2])
+}
+
+result <- merge(result, scores, by.x  ="score", by.y = "Polygenic Score (PGS) ID")
+
+result <- result %>%
+  mutate(
+    has_error = case_when(
+      is.na(error) ~ TRUE,
+      TRUE ~  FALSE
+    )
+  )
+
+
+# TODO: build table
+```
+
+## Unreadable Files
+
+```{r}
+
+ggplot(result, aes(x = has_error)) +  geom_bar()
+result %>%
+  group_by(has_error) %>%
+  summarize(count = n()) %>%
+  mutate(percentage = paste(round(count / sum(count) * 100, 2), "%")) %>%     
+  arrange(desc(percentage)) %>%
+  datatable()
+
+
+errors <- result %>%
+  filter(!is.na(error)) %>%
+  select(score, error)
+errors %>% datatable()
+
+```
+
+## Format
+
+```{r}
+ggplot(result, aes(x = format)) +  geom_bar()
+result %>%
+  group_by(format) %>%
+  summarize(count = n()) %>%
+  mutate(percentage = paste(round(count / sum(count) * 100, 2), "%")) %>%
+  arrange(desc(percentage)) %>%
+  datatable()
+```
+
+## Coverage
+
+```{r}
+ggplot(result, aes(x=as.double(coverage))) +  geom_histogram()
+```
+
+
+## Low Coverage
+
+```{r}
+coverage_filter = 0.75
+low_coverage <- result %>% filter(coverage < coverage_filter)
+low_coverage %>%
+  select(score, coverage, variants, original_variants, format, original_build) %>%
+  datatable()
+```
+
+
+## Final Scores
+
+```{r}
+final <- result %>%
+  filter(coverage >= coverage_filter & is.na(error)) %>%
+  mutate (
+    action = case_when(
+      !is.na(chain_file) ~ "LIFT_OVER",
+      !is.na(dbsnp_file) ~ "RSID_TO_COORDINATES",
+      TRUE ~ "NONE"
+    )
+  )
+
+ggplot(final, aes(x = action)) +  geom_bar()
+
+final %>%
+  group_by(action) %>%
+  summarize(count = n()) %>%
+  mutate(percentage = paste(round(count / sum(count) * 100, 2), "%")) %>%
+  arrange(desc(percentage)) %>%
+  datatable()
+
+final %>%
+  select(score, coverage, variants, original_variants, format, original_build, action) %>%
+  datatable()
+
+final %>%
+   select(score, coverage, variants, original_variants, format, original_build, action) %>%
+   write.csv(file = params$output_filename,  row.names = FALSE)
+```
+
+## Summary
+
+- Input: `r nrow(scores)` scores
+- Unsupported Build: `r nrow(other_build)` ( `r round(nrow(other_build) / nrow(scores),2)`%)
+- Unreadable Files: `r nrow(errors)` ( `r round(nrow(errors) / nrow(scores),2)`%)
+- Coverage < `r coverage_filter`: `r nrow(low_coverage)` ( `r round(nrow(low_coverage) / nrow(scores),2)` %)
+- Output: `r nrow(final)` scores (`r round(nrow(final) / nrow(scores),2)`%)

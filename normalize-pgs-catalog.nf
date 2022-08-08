@@ -17,7 +17,7 @@ if (params.build == "hg19"){
 Channel.fromFilePairs(params.dbsnp_index).set{dbsnp_index_ch}
 Channel.fromPath(params.chain_files).set{chain_files_ch}
 ExcelToCsvJava = file("$baseDir/src/ExcelToCsv.java")
-
+summary_template = file("$baseDir/src/report.Rmd")
 
 process cacheJBangScripts {
 
@@ -40,8 +40,11 @@ if (params.pgs_catalog_url.startsWith('https://') || params.pgs_catalog_url.star
 
   process downloadPGSCatalogMeta {
 
+    publishDir "$params.output", mode: 'copy'
+
     output:
       file "*.xlsx" into pgs_catalog_excel_file
+      file "*.xlsx" into pgs_catalog_excel_file2
 
     """
     wget ${params.pgs_catalog_url}
@@ -52,9 +55,9 @@ if (params.pgs_catalog_url.startsWith('https://') || params.pgs_catalog_url.star
 } else {
 
   pgs_catalog_excel_file = file(params.pgs_catalog_url)
+  pgs_catalog_excel_file2 = file(params.pgs_catalog_url)
 
 }
-
 
 process convertPgsCatalogMeta {
 
@@ -166,6 +169,34 @@ process createCloudgeneYaml {
   
   echo "SCORES" > scores.txt
   echo "scores/${scores.join('\nscores/')}" >> scores.txt
+  """
+
+}
+
+process createHtmlReport {
+
+  publishDir "$params.output", mode: 'copy'
+
+  input:
+    file scores from pgs_catalog_scores_logs.collect()
+    file summary_template
+    file meta_file from pgs_catalog_excel_file2
+
+  output:
+    file "summary.html"
+    file "summary.csv"
+
+  """
+  Rscript -e "require( 'rmarkdown' ); render('${summary_template}',
+     params = list(
+       logs_directory = '\$PWD',
+       meta_file = '${meta_file}',
+       output_filename='summary.csv'
+     ),
+     intermediates_dir='\$PWD',
+     knit_root_dir='\$PWD',
+     output_file='\$PWD/summary.html'
+   )"
   """
 
 }
