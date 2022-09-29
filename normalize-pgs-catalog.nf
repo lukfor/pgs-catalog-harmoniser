@@ -152,6 +152,9 @@ process createCloudgeneYaml {
     file "scores.txt"
 
   """
+
+  pgs-calc download-meta --out meta.json
+
   echo "id: pgs-catalog-v${params.version}-${params.build}" > cloudgene.yaml
   echo "name: PGS Catalog (${params.build}, ${scores.size()} scores)" >> cloudgene.yaml
   echo "version: ${params.version}" >> cloudgene.yaml
@@ -159,14 +162,15 @@ process createCloudgeneYaml {
   echo "website: https://www.pgscatalog.org" >> cloudgene.yaml
   echo "properties:" >> cloudgene.yaml
   echo "  build: ${params.build}" >> cloudgene.yaml
+  echo "  meta: meta.json" >> cloudgene.yaml
   echo "  location: \\\${hdfs_app_folder}/scores" >> cloudgene.yaml
   echo "  scores:" >> cloudgene.yaml
-  echo "    - ${scores.join('\n      - ')}" >> cloudgene.yaml
+  echo "    - ${scores.join('\n    - ')}" >> cloudgene.yaml
   echo "installation:" >> cloudgene.yaml
   echo "  - import:" >> cloudgene.yaml
   echo "      source: \\\${local_app_folder}/scores" >> cloudgene.yaml
   echo "      target: \\\${hdfs_app_folder}/scores" >> cloudgene.yaml
-  
+
   echo "SCORES" > scores.txt
   echo "scores/${scores.join('\nscores/')}" >> scores.txt
   """
