@@ -13,12 +13,12 @@ RUN wget https://github.com/jbangdev/jbang/releases/download/v0.78.0/jbang.zip &
     rm jbang.zip
 ENV PATH="/opt/jbang/bin:${PATH}"
 
+RUN apt-get --allow-releaseinfo-change update && apt-get install -y tabix
+
 # Install pgs-calc (not as conda package available)
-ENV PGS_CALC_VERSION="1.5.0"
+ENV PGS_CALC_VERSION="1.5.1"
 RUN mkdir /opt/pgs-calc
 WORKDIR "/opt/pgs-calc"
 RUN wget https://github.com/lukfor/pgs-calc/releases/download/v${PGS_CALC_VERSION}/pgs-calc-${PGS_CALC_VERSION}.tar.gz && \
     tar -xf pgs-calc-*.tar.gz
 ENV PATH="/opt/pgs-calc:${PATH}"
-
-RUN apt-get --allow-releaseinfo-change update && apt-get install -y tabix

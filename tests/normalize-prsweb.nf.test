@@ -1,0 +1,39 @@
+nextflow_pipeline {
+
+    name "Test Workflow normalize-prsweb.nf"
+    script "normalize-prsweb.nf"
+
+    test("Test with hg19") {
+
+        when {
+            params {
+                build = "hg19"
+                output = "output/exprsweb-20210110-hg19"
+                prsweb = "tests/input/exprsweb_small.txt"
+            }
+        }
+
+        then {
+            assert workflow.success
+        }
+
+    }
+
+    test("Test with hg38") {
+
+        when {
+            params {
+                build = "hg38"
+                output = "output/exprsweb-20210110-hg38"
+                prsweb = "tests/input/exprsweb_small.txt"
+            }
+        }
+
+        then {
+            assert workflow.success
+        }
+
+    }
+
+
+}

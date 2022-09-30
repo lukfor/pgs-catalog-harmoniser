@@ -69,6 +69,23 @@ nextflow run normalize-pgs-catalog.nf \
 
 Pre-calculated files for hg19 and hg38 can be found [here](https://imputationserver.sph.umich.edu/resources/pgs-catalog/).
 
+
+## Step 3: Download all scores from ExPRSweb or Cancer-PRSweb
+
+The following command downloads all scores from PGS-Catalog and creates harmonized files for all of them (e.g. build hg38):
+
+```
+nextflow run normalize-prsweb.nf \
+  --id "exprsweb" \
+  --name "ExPRSweb" \
+  --build "hg38" \
+  --version "20210110" \
+  --prsweb "data/exprsweb.txt" \
+  --output "output/exprsweb-20210110-hg38"
+```
+
+Pre-calculated files for hg19 and hg38 can be found [here](https://imputationserver.sph.umich.edu/resources/prsweb/).
+
 ## Contact
 
 Lukas Forer, Institute of Genetic Epidemiology, Medical University of Innsbruck

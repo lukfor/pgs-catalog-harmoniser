@@ -163,7 +163,7 @@ process createCloudgeneYaml {
   echo "website: https://www.pgscatalog.org" >> cloudgene.yaml
   echo "properties:" >> cloudgene.yaml
   echo "  build: ${params.build}" >> cloudgene.yaml
-  echo "  meta: scores.meta.json" >> cloudgene.yaml
+  echo "  meta: \\\${local_app_folder}/scores.meta.json" >> cloudgene.yaml
   echo "  location: \\\${hdfs_app_folder}/scores" >> cloudgene.yaml
   echo "  scores:" >> cloudgene.yaml
   echo "    - ${scores.join('\n    - ')}" >> cloudgene.yaml

@@ -8,7 +8,7 @@ nextflow_pipeline {
         when {
             params {
                 build = "hg19"
-                output = "output/test1"
+                output = "output/pgs-catalog-1.0.0-hg19"
                 version = "1.0.0"
                 dbsnp_index = "tests/input/dbsnp-index.small{.txt.gz,.txt.gz.tbi}"
                 pgs_catalog_url = "tests/input/pgs_all_metadata_pgs000899.xlsx"
@@ -26,7 +26,7 @@ nextflow_pipeline {
         when {
             params {
                 build = "hg38"
-                output = "output/test2"
+                output = "output/pgs-catalog-1.0.0-hg38"
                 version = "1.0.0"
                 dbsnp_index = "tests/input/dbsnp-index.small{.txt.gz,.txt.gz.tbi}"
                 pgs_catalog_url = "tests/input/pgs_all_metadata_pgs000899.xlsx"
