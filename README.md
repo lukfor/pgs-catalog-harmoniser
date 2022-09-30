@@ -72,7 +72,7 @@ Pre-calculated files for hg19 and hg38 can be found [here](https://imputationser
 
 ## Step 3: Download all scores from ExPRSweb or Cancer-PRSweb
 
-The following command downloads all scores from PGS-Catalog and creates harmonized files for all of them (e.g. build hg38):
+The following command downloads all scores from a PRSweb instance and creates harmonized files for all of them (e.g. build hg38):
 
 ```
 nextflow run normalize-prsweb.nf \
