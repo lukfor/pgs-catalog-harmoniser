@@ -1,4 +1,26 @@
-# normalize-pgs-catalog
+# 🏗 PGS-Repository Builder
+
+This repository is a collection of Nextflow pipelines to create PGS repositories for [PGS-Server](https://imputationserver.sph.umich.edu) or [pgs-calc](https://github.com/lukfor/pgs-calc).
+
+## Requirements
+
+- Nextflow:
+
+```
+curl -s https://get.nextflow.io | bash
+```
+
+- Docker
+
+## Installation
+
+Build docker image before run the pipeline:
+
+```
+docker build -t lukfor/pgs-repository-builder . # don't ingore the dot here
+```
+
+## PGS Repository from PGS-Catalog
 
 This Nextflow pipeline downloads all scores from PGS-Catalog and:
 
@@ -21,41 +43,6 @@ graph TD
 
 The resulting files are all on the same build and compatible with [pgs-calc](https://github.com/lukfor/pgs-calc). pgs-calc can also be used to harmonize only one score (see command `resolve`).
 
-## Requirements
-
-- Nextflow:
-
-```
-curl -s https://get.nextflow.io | bash
-```
-
-- Docker
-
-## Installation
-
-Build docker image before run the pipeline:
-
-```
-docker build -t lukfor/normalize-pgs-catalog . # don't ingore the dot here
-```
-
-## Step 1: Create dbSNP Index
-
-The following command can be used to create a dbsnp-index file using dbSNP 154 and build hg19:
-
-```
-nextflow run dbsnp-index.nf \
-  --dbsnp 154 \
-  --build hg19 \
-  --format tab \
-  --vcf_url https://resources.pheweb.org/rsids-v154-hg19.tsv.gz \
-  --output output/dbsnp-index
-```
-
-Pre-calculated dbsnp-index files can be found [here](https://imputationserver.sph.umich.edu/resources/dbsnp-index/). They can be used in [pgs-calc](https://github.com/lukfor/pgs-calc) to resolve rsIDs to chromosomal positions.
-
-## Step 2: Download all scores and replace rsIDs with phyiscal positions
-
 The following command downloads all scores from PGS-Catalog and creates harmonized files for all of them (e.g. build hg19):
 
 ```
@@ -70,7 +57,7 @@ nextflow run normalize-pgs-catalog.nf \
 Pre-calculated files for hg19 and hg38 can be found [here](https://imputationserver.sph.umich.edu/resources/pgs-catalog/).
 
 
-## Step 3: Download all scores from ExPRSweb or Cancer-PRSweb
+## PGS Repository from ExPRSweb or Cancer-PRSweb
 
 The following command downloads all scores from a PRSweb instance and creates harmonized files for all of them (e.g. build hg38):
 
@@ -85,6 +72,22 @@ nextflow run normalize-prsweb.nf \
 ```
 
 Pre-calculated files for hg19 and hg38 can be found [here](https://imputationserver.sph.umich.edu/resources/prsweb/).
+
+## dbSNP Index
+
+The following command can be used to create a dbsnp-index file using dbSNP 154 and build hg19:
+
+```
+nextflow run dbsnp-index.nf \
+  --dbsnp 154 \
+  --build hg19 \
+  --format tab \
+  --vcf_url https://resources.pheweb.org/rsids-v154-hg19.tsv.gz \
+  --output output/dbsnp-index
+```
+
+Pre-calculated dbsnp-index files can be found [here](https://imputationserver.sph.umich.edu/resources/dbsnp-index/). They can be used in [pgs-calc](https://github.com/lukfor/pgs-calc) to resolve rsIDs to chromosomal positions.
+
 
 ## Contact
 
