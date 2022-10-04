@@ -1,5 +1,7 @@
 # 🏗 PGS-Repository Builder
 
+[![nf-test](https://img.shields.io/badge/tested_with-nf--test-337ab7.svg)](https://github.com/askimed/nf-test)
+
 This repository is a collection of Nextflow pipelines to create PGS repositories for [PGS-Server](https://imputationserver.sph.umich.edu) or [pgs-calc](https://github.com/lukfor/pgs-calc).
 
 ## Requirements
